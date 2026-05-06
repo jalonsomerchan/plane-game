@@ -1,10 +1,10 @@
 const CITY_DEFS = [
-  { name: "Madrid", lat: 40.4168, lon: -3.7038, zoom: 18, size: 0.085 },
-  { name: "Paris", lat: 48.8566, lon: 2.3522, zoom: 14, size: 0.085 },
-  { name: "Roma", lat: 41.9028, lon: 12.4964, zoom: 14, size: 0.085 },
-  { name: "Tokio", lat: 35.6762, lon: 139.6503, zoom: 14, size: 0.095 },
-  { name: "Los Ángeles", lat: 34.0522, lon: -118.2437, zoom: 13, size: 0.12 },
-  { name: "Cáceres", lat: 39.4765, lon: -6.3722, zoom: 15, size: 0.065 },
+  { name: "Madrid", lat: 40.4168, lon: -3.7038, zoom: 17, size: 0.085 },
+  { name: "Paris", lat: 48.8566, lon: 2.3522, zoom: 17, size: 0.085 },
+  { name: "Roma", lat: 41.9028, lon: 12.4964, zoom: 17, size: 0.085 },
+  { name: "Tokio", lat: 35.6762, lon: 139.6503, zoom: 17, size: 0.095 },
+  { name: "Los Ángeles", lat: 34.0522, lon: -118.2437, zoom: 17, size: 0.12 },
+  { name: "Cáceres", lat: 39.4765, lon: -6.3722, zoom: 17, size: 0.065 },
 ];
 
 const TILE_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile";
@@ -130,30 +130,30 @@ class TileLayer {
   draw(ctx, centerTileX, centerTileY, zoom, width, height) {
     const tileSize = 256;
     const centerTile = { x: centerTileX, y: centerTileY };
-    
+
     // Calculamos el rango de baldosas alrededor del centro
     // Usamos un margen generoso para cubrir las esquinas al rotar
     const rangeX = Math.ceil(width / tileSize);
     const rangeY = Math.ceil(height / tileSize);
-    
+
     const startX = Math.floor(centerTile.x) - rangeX;
     const endX = Math.floor(centerTile.x) + rangeX;
     const startY = Math.floor(centerTile.y) - rangeY;
     const endY = Math.floor(centerTile.y) + rangeY;
-    
+
     const maxTile = 2 ** zoom;
 
     for (let tileX = startX; tileX <= endX; tileX += 1) {
       for (let tileY = startY; tileY <= endY; tileY += 1) {
         if (tileY < 0 || tileY >= maxTile) continue;
-        
+
         const wrappedX = ((tileX % maxTile) + maxTile) % maxTile;
         const image = this.getTile(zoom, wrappedX, tileY);
-        
+
         // Dibujamos relativo al centro fraccionario de la baldosa del jugador
         const screenX = (tileX - centerTile.x) * tileSize;
         const screenY = (tileY - centerTile.y) * tileSize;
-        
+
         if (image) {
           ctx.drawImage(image, screenX, screenY, tileSize, tileSize);
         } else {
@@ -208,6 +208,7 @@ class Game {
     this.city = CITY_DEFS[0];
     this.resize();
     this.reset();
+    this.shake = 0;
   }
 
   reset() {
@@ -312,7 +313,7 @@ class Game {
     const turboActive = this.keys.shift || this.keys.turbo;
     if (turboActive && this.player.turbo > 0) {
       this.player.isTurbo = true;
-      this.player.turbo -= dt * 38; 
+      this.player.turbo -= dt * 38;
     } else {
       this.player.isTurbo = false;
       this.player.turbo = Math.min(100, this.player.turbo + dt * 12);
@@ -322,7 +323,7 @@ class Game {
     const keyTurn = (this.keys.right ? 1 : 0) - (this.keys.left ? 1 : 0);
     const stickMagnitude = Math.hypot(this.joystick.x, this.joystick.y);
     const usingStick = stickMagnitude > 0.15;
-    
+
     // El joystick X controla la posición del "timón" (steering)
     let targetRudder = usingStick ? clamp(this.joystick.x, -1, 1) : keyTurn;
     this.player.steering += (targetRudder - this.player.steering) * 0.08;
@@ -331,14 +332,14 @@ class Game {
     // El giro es más efectivo cuanta más velocidad tengas
     const speedRatio = clamp(Math.abs(this.player.velocity) / FLIGHT_MAX_SPEED, 0, 1);
     const yawTarget = this.player.steering * FLIGHT_MAX_YAW * (0.18 + speedRatio * 0.82);
-    
+
     // Aceleración de la rotación (guiñada)
     const yawDelta = clamp(yawTarget - this.player.yawVelocity, -FLIGHT_TURN_ACCEL * dt, FLIGHT_TURN_ACCEL * dt);
     this.player.yawVelocity += yawDelta;
-    
+
     // Rozamiento para que el giro no sea infinito[cite: 2]
     this.player.yawVelocity *= 1 - clamp(dt * 1.15, 0, 0.18);
-    
+
     // Actualizamos el ángulo (heading)[cite: 2]
     this.player.angle = normalizeAngle(this.player.angle + this.player.yawVelocity * dt);
 
@@ -374,7 +375,7 @@ class Game {
     for (let i = 0; i < spreadCount; i += 1) {
       // 2. Calculamos el desvío (abanico) si hay más de una bala[cite: 1]
       const angleOffset = spreadCount === 1 ? 0 : (i - (spreadCount - 1) / 2) * 0.12;
-      
+
       // 3. El ángulo final de la bala es el rumbo del avión + el desvío del nivel[cite: 1, 2]
       const bulletAngle = this.player.angle + angleOffset;
 
@@ -383,7 +384,7 @@ class Game {
         // Usamos Math.cos y Math.sin para que salgan siempre por el "morro"
         x: this.player.x + Math.cos(this.player.angle) * 30,
         y: this.player.y + Math.sin(this.player.angle) * 30,
-        
+
         angle: bulletAngle,
         speed: 420, // Velocidad de la bala[cite: 1]
         damage: 12 + this.player.level * 2, // Daño progresivo[cite: 1]
@@ -516,6 +517,8 @@ class Game {
       for (const enemy of this.enemies) {
         if (distance(bullet, enemy) < enemy.radius) {
           enemy.hp -= bullet.damage;
+          enemy.hitTtl = 0.12; // Destello al ser golpeado
+          this.effects.push({ x: bullet.x, y: bullet.y, radius: 2, ttl: 0.15, spark: true });
           bullet.ttl = 0;
           break;
         }
@@ -552,7 +555,8 @@ class Game {
   damagePlayer(amount) {
     this.player.life -= amount;
     this.player.invulnerable = 1.2;
-    this.effects.push({ x: this.player.x, y: this.player.y, radius: 0, ttl: 0.3, blast: true });
+    this.shake = 15; // Sacudida de pantalla
+    this.effects.push({ x: this.player.x, y: this.player.y, radius: 0, ttl: 0.5, blast: true, color: "#ff2200" });
     if (this.player.life <= 0) {
       this.active = false;
       this.showMessage("Derrota", `Tu avión ha caído sobre ${this.city.name}. Reintenta la misión.`);
@@ -595,15 +599,27 @@ class Game {
     const ctx = this.ctx;
     if (!ctx) return;
 
-    // Limpiar pantalla
+    ctx.save();
+
+    // Sacudida de pantalla
+    if (this.shake > 0) {
+      const sx = (Math.random() - 0.5) * this.shake;
+      const sy = (Math.random() - 0.5) * this.shake;
+      ctx.translate(sx, sy);
+      this.shake *= 0.88;
+      if (this.shake < 0.4) this.shake = 0;
+    }
+
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
     // Llamar a los objetos del mundo pasando el contexto
-    this.renderWorldObjects(ctx); 
+    this.renderWorldObjects(ctx);
 
     // UI (esto no se mueve con la cámara)
     this.renderMinimapHint(ctx);
     this.renderCompass(ctx);
+
+    ctx.restore();
   }
 
   renderWorldObjects(ctx) {
@@ -616,7 +632,7 @@ class Game {
     }
 
     ctx.save();
-    
+
     // 1. CENTRAR CÁMARA
     ctx.translate(centerX, centerY);
 
@@ -627,7 +643,7 @@ class Game {
     // Sincronizamos las baldosas con la posición del jugador en píxeles (1 unidad = 1 píxel)
     const currentTileX = this.cityTileOrigin.x + this.player.x / 256;
     const currentTileY = this.cityTileOrigin.y + this.player.y / 256;
-    
+
     // El mapa se dibuja relativo al centro de la cámara (el jugador)
     this.tileLayer.draw(ctx, currentTileX, currentTileY, this.city.zoom, window.innerWidth * 2, window.innerHeight * 2);
 
@@ -712,8 +728,18 @@ class Game {
 
   drawEnemy(ctx, e) {
     const sheet = e.type === "fly" ? this.assets.alienFly : this.assets.alienGround;
-    // Dibujamos al enemigo en sus coordenadas X, Y reales (la cámara ya se encargó de la traslación)
-    sheet.drawFrame(ctx, e.frame, e.x, e.y, e.radius * 2, e.radius * 2, e.angle + Math.PI/2);
+
+    if (e.hitTtl > 0) {
+      e.hitTtl -= 0.016; // Aproximadamente 60fps
+      ctx.save();
+      ctx.filter = "brightness(3) contrast(2)"; // Destello blanco
+    }
+
+    sheet.drawFrame(ctx, e.frame, e.x, e.y, e.radius * 2, e.radius * 2, e.angle + Math.PI / 2);
+
+    if (e.hitTtl > 0) {
+      ctx.restore();
+    }
   }
 
   drawPickup(ctx, p) {
@@ -722,11 +748,28 @@ class Game {
   }
 
   drawEffect(ctx, e) {
-    ctx.strokeStyle = `rgba(255, 100, 0, ${e.ttl / 0.45})`;
-    ctx.lineWidth = 3;
+    if (e.spark) {
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.radius * (1 + (0.15 - e.ttl) * 10), 0, Math.PI * 2);
+      ctx.fill();
+      return;
+    }
+
+    const alpha = e.ttl / 0.45;
+    ctx.lineWidth = 4;
+
+    // Anillo exterior
+    ctx.strokeStyle = e.color || `rgba(255, 160, 0, ${alpha})`;
     ctx.beginPath();
     ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
     ctx.stroke();
+
+    // Núcleo de la explosión
+    ctx.fillStyle = e.color || `rgba(255, 255, 255, ${alpha * 0.5})`;
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, e.radius * 0.6, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   drawTrail(ctx) {
@@ -750,15 +793,15 @@ class Game {
     else if (steering > 0.15) img = this.assets.player.right;
 
     ctx.save();
-    
-    // Efecto de parpadeo por daño
-    if (this.player.invulnerable > 0 && Math.floor(this.time * 14) % 2 === 0) {
-      ctx.globalAlpha = 0.45;
+
+    // Tintado rojo suave si es invulnerable (en lugar de parpadeo)
+    if (this.player.invulnerable > 0) {
+      ctx.filter = "sepia(1) saturate(5) hue-rotate(-50deg)";
     }
 
     // Dibujamos el sprite centrado en x, y
     ctx.drawImage(img, x - 46, y - 46, 92, 92);
-    
+
     ctx.restore();
   }
 
