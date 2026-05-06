@@ -310,7 +310,7 @@ class Game {
     if (this.player.invulnerable > 0) this.player.invulnerable -= dt;
 
     // --- LÓGICA DE TURBO ---
-    const turboActive = this.keys.shift || this.keys.turbo;
+    const turboActive = this.keys.shift || (this.joystick.activePointerId !== null && this.joystick.y < -0.6);
     if (turboActive && this.player.turbo > 0) {
       this.player.isTurbo = true;
       this.player.turbo -= dt * 38;
@@ -566,7 +566,7 @@ class Game {
   updateHud() {
     hudCity.textContent = this.city.name;
     hudObjective.textContent = `Objetivo: ${this.stats.destroyed} / ${this.stats.total}`;
-    hudLife.textContent = `Vida: ${Math.max(0, Math.round(this.player.life))} · Turbo: ${Math.round(this.player.turbo)}%`;
+    hudLife.textContent = `Vida: ${Math.max(0, Math.round(this.player.life))}`;
     hudLevel.textContent = `Nivel: ${this.player.level}`;
     hudMissiles.textContent = `Misiles: ${this.player.missiles}`;
   }
@@ -849,6 +849,14 @@ async function boot() {
   function updateJoystickVisual() {
     const radius = joystickBase.clientWidth * 0.26;
     joystickKnob.style.transform = `translate(calc(-50% + ${game.joystick.x * radius}px), calc(-50% + ${game.joystick.y * radius}px))`;
+    
+    // Actualizar barra de turbo
+    const turboBarFill = document.getElementById("turboBarFill");
+    if (turboBarFill) {
+      turboBarFill.style.width = `${game.player.turbo}%`;
+      // Cambiar color si está activo
+      turboBarFill.style.filter = game.player.isTurbo ? "brightness(1.5) contrast(1.2)" : "none";
+    }
   }
 
   function resetJoystick() {
@@ -891,11 +899,6 @@ async function boot() {
   });
 
   missileButton.addEventListener("click", () => game.launchMissile());
-
-  const turboButton = document.getElementById("turboButton");
-  turboButton.addEventListener("pointerdown", () => setTurnState("turbo", true));
-  turboButton.addEventListener("pointerup", () => setTurnState("turbo", false));
-  turboButton.addEventListener("pointerleave", () => setTurnState("turbo", false));
 
   joystickBase.addEventListener("pointerdown", (event) => {
     game.joystick.activePointerId = event.pointerId;
