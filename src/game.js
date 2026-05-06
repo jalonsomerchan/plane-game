@@ -45,7 +45,9 @@ for (const city of CITY_DEFS) {
 }
 
 const spritePaths = {
-  player: "./assets/sprites/player/sheet-transparent.png",
+  playerCenter: "./assets/sprites/player/down-1.png",
+  playerLeft: "./assets/sprites/player/left-1.png",
+  playerRight: "./assets/sprites/player/right-1.png",
   alienFly: "./assets/sprites/alien-fly/sheet-transparent.png",
   alienGround: "./assets/sprites/alien-ground/sheet-transparent.png",
   pickups: "./assets/sprites/pickups/sheet-transparent.png",
@@ -125,9 +127,9 @@ class TileLayer {
     return null;
   }
 
-  draw(ctx, center, zoom, width, height) {
+  draw(ctx, centerTileX, centerTileY, zoom, width, height) {
     const tileSize = 256;
-    const centerTile = latLonToTileXY(center.lat, center.lon, zoom);
+    const centerTile = { x: centerTileX, y: centerTileY };
     
     // Calculamos el rango de baldosas alrededor del centro
     // Usamos un margen generoso para cubrir las esquinas al rotar
@@ -233,6 +235,7 @@ class Game {
     this.trail = [];
     this.stats = { total: 0, destroyed: 0 };
     this.time = 0;
+    this.cityTileOrigin = null;
   }
 
   resize() {
@@ -334,11 +337,7 @@ class Game {
     this.player.x += Math.cos(this.player.angle) * this.player.velocity * dt;
     this.player.y += Math.sin(this.player.angle) * this.player.velocity * dt;
 
-    // --- DISPARO Y LÍMITES ---
-    const worldLimit = this.city.size * 12000 * 0.5;
-    this.player.x = clamp(this.player.x, -worldLimit, worldLimit);
-    this.player.y = clamp(this.player.y, -worldLimit, worldLimit);
-    
+    // --- DISPARO ---
     this.player.fireCooldown -= dt;
     if (this.player.fireCooldown <= 0) {
       this.autoFire(); // Esta función usará el nuevo this.player.angle
@@ -424,14 +423,15 @@ class Game {
   updateEnemies(dt) {
     for (const enemy of this.enemies) {
       enemy.fireCooldown -= dt;
-      enemy.frame = Math.floor(this.time * 7) % 4;
-
       if (enemy.type === "fly") {
+        enemy.frame = Math.floor(this.time * 7) % 4;
         const targetAngle = Math.atan2(this.player.y - enemy.y, this.player.x - enemy.x);
         const delta = normalizeAngle(targetAngle - enemy.angle);
         enemy.angle += clamp(delta, -1.6 * dt, 1.6 * dt);
         enemy.x += Math.cos(enemy.angle) * enemy.speed * dt;
         enemy.y += Math.sin(enemy.angle) * enemy.speed * dt;
+      } else {
+        enemy.frame = 0; // Estático para tierra
       }
 
       const range = distance(enemy, this.player);
@@ -574,14 +574,8 @@ class Game {
     };
   }
 
-  currentMapCenter() {
-    const tileCenter = latLonToTileXY(this.city.lat, this.city.lon, this.city.zoom);
-    // Un valor de 1/256 hace que las unidades del mundo coincidan con los píxeles de las baldosas
-    const offsetScale = 1 / 256; 
-    const x = tileCenter.x + this.player.x * offsetScale;
-    const y = tileCenter.y + this.player.y * offsetScale;
-    return tileXYToLatLon(x, y, this.city.zoom);
-  }
+  // Este método ya no es necesario ya que calculamos las baldosas directamente en renderWorldObjects
+  // para asegurar una sincronización perfecta con los objetos del mundo.
 
   render() {
     const ctx = this.ctx;
@@ -601,21 +595,30 @@ class Game {
     const centerX = window.innerWidth / 2;
     const centerY = window.innerHeight / 2;
 
-    ctx.save(); // Ahora ctx ya no es undefined
+    // Calculamos el centro de la ciudad en coordenadas de baldosa una sola vez
+    if (!this.cityTileOrigin) {
+      this.cityTileOrigin = latLonToTileXY(this.city.lat, this.city.lon, this.city.zoom);
+    }
+
+    ctx.save();
     
     // 1. CENTRAR CÁMARA
     ctx.translate(centerX, centerY);
 
     // 2. ROTAR EL MUNDO (Efecto brújula)
-    // El mundo rota al revés que el avión para que siempre parezca que vas hacia arriba
     ctx.rotate(-this.player.angle - Math.PI / 2);
 
-    // 3. SEGUIR AL JUGADOR
-    // Desplazamos el mapa en sentido contrario a la posición X, Y del avión
-    ctx.translate(-this.player.x, -this.player.y);
-
     // --- DIBUJAR TODO LO QUE ESTÁ EN EL MAPA ---
-    this.tileLayer.draw(ctx, this.currentMapCenter(), this.city.zoom, window.innerWidth * 2, window.innerHeight * 2);
+    // Sincronizamos las baldosas con la posición del jugador en píxeles (1 unidad = 1 píxel)
+    const currentTileX = this.cityTileOrigin.x + this.player.x / 256;
+    const currentTileY = this.cityTileOrigin.y + this.player.y / 256;
+    
+    // El mapa se dibuja relativo al centro de la cámara (el jugador)
+    this.tileLayer.draw(ctx, currentTileX, currentTileY, this.city.zoom, window.innerWidth * 2, window.innerHeight * 2);
+
+    // El resto de objetos se dibujan relativos a la posición del jugador
+    ctx.save();
+    ctx.translate(-this.player.x, -this.player.y);
 
     this.drawTrail(ctx);
     this.bullets.forEach(b => this.drawBullet(ctx, b));
@@ -625,6 +628,7 @@ class Game {
     this.pickups.forEach(p => this.drawPickup(ctx, p));
     this.effects.forEach(e => this.drawEffect(ctx, e));
 
+    ctx.restore();
     ctx.restore();
 
     // --- DIBUJAR EL AVIÓN SIEMPRE EN EL CENTRO ---
@@ -681,8 +685,10 @@ class Game {
   }
 
   renderPlayer(ctx, x, y) {
-    const playerRow = this.getPlayerRow(); // Inclinación según this.player.steering
-    const frame = playerRow * 4 + Math.floor(this.time * 10) % 4;
+    const steering = this.player.steering;
+    let img = this.assets.player.center;
+    if (steering < -0.15) img = this.assets.player.left;
+    else if (steering > 0.15) img = this.assets.player.right;
 
     ctx.save();
     
@@ -692,16 +698,10 @@ class Game {
     }
 
     // Dibujamos el sprite centrado en x, y
-    this.assets.player.drawFrame(ctx, frame, x, y, 92, 92);
+    ctx.drawImage(img, x - 46, y - 46, 92, 92);
     
     ctx.restore();
   }
-  getPlayerRow() {
-  // Si el timón está girando a la izquierda/derecha, inclinamos el avión
-  if (this.player.steering < -0.15) return 1;
-  if (this.player.steering > 0.15) return 2;
-  return 0;
-}
 
   renderMinimapHint(ctx) {
     ctx.fillStyle = "rgba(5, 12, 22, 0.55)";
@@ -718,15 +718,21 @@ class Game {
 }
 
 async function boot() {
-  const [playerImage, alienFlyImage, alienGroundImage, pickupsImage] = await Promise.all([
-    loadImage(spritePaths.player),
+  const [playerCenter, playerLeft, playerRight, alienFlyImage, alienGroundImage, pickupsImage] = await Promise.all([
+    loadImage(spritePaths.playerCenter),
+    loadImage(spritePaths.playerLeft),
+    loadImage(spritePaths.playerRight),
     loadImage(spritePaths.alienFly),
     loadImage(spritePaths.alienGround),
     loadImage(spritePaths.pickups),
   ]);
 
   const assets = {
-    player: new SpriteSheet(playerImage, 4, 4),
+    player: {
+      center: playerCenter,
+      left: playerLeft,
+      right: playerRight,
+    },
     alienFly: new SpriteSheet(alienFlyImage, 2, 2),
     alienGround: new SpriteSheet(alienGroundImage, 2, 2),
     pickups: new SpriteSheet(pickupsImage, 2, 2),
