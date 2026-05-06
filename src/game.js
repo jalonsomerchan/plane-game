@@ -304,6 +304,7 @@ class Game {
   update(dt) {
     if (!this.active) return;
     this.time += dt;
+    if (this.player.invulnerable > 0) this.player.invulnerable -= dt;
 
     // --- LÓGICA DE TIMÓN (RUDDER) ---
     const keyTurn = (this.keys.right ? 1 : 0) - (this.keys.left ? 1 : 0);
