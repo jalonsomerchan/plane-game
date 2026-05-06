@@ -910,7 +910,7 @@ async function boot() {
   missileButton.addEventListener("click", () => game.launchMissile());
   
   // Evitar zoom en doble tap para botones específicos
-  [missileButton, turboButton, startButton, messageButton].forEach(btn => {
+  [missileButton, startButton, messageButton].forEach(btn => {
     if (!btn) return;
     btn.addEventListener("touchstart", (e) => {
       // Permitimos el evento pero evitamos comportamientos de sistema si es necesario
