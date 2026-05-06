@@ -450,7 +450,7 @@ class Game {
       }
 
       const range = distance(enemy, this.player);
-      if (enemy.fireCooldown <= 0 && range < (enemy.type === "ground" ? 360 : 300)) {
+      if (enemy.fireCooldown <= 0 && range < (enemy.type === "ground" ? 850 : 700)) {
         const angle = Math.atan2(this.player.y - enemy.y, this.player.x - enemy.x);
         this.enemyBullets.push({
           x: enemy.x,
@@ -711,10 +711,19 @@ class Game {
   }
 
   drawBullet(ctx, b, color = "#fff") {
+    ctx.save();
     ctx.fillStyle = color;
+    
+    // Si es bala enemiga (color no blanco), le damos un brillo especial
+    if (color !== "#fff") {
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = color;
+    }
+    
     ctx.beginPath();
-    ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
+    ctx.arc(b.x, b.y, color === "#fff" ? 3.5 : 5, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
   }
 
   drawMissile(ctx, m) {
@@ -899,6 +908,15 @@ async function boot() {
   });
 
   missileButton.addEventListener("click", () => game.launchMissile());
+  
+  // Evitar zoom en doble tap para botones específicos
+  [missileButton, turboButton, startButton, messageButton].forEach(btn => {
+    if (!btn) return;
+    btn.addEventListener("touchstart", (e) => {
+      // Permitimos el evento pero evitamos comportamientos de sistema si es necesario
+      // En iOS esto ayuda a que el click sea instantáneo
+    }, { passive: true });
+  });
 
   joystickBase.addEventListener("pointerdown", (event) => {
     game.joystick.activePointerId = event.pointerId;

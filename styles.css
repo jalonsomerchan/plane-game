@@ -28,6 +28,11 @@ body {
   background:
     radial-gradient(circle at top, rgba(44, 88, 146, 0.35), transparent 35%),
     linear-gradient(180deg, #08111e 0%, #040812 100%);
+  touch-action: none;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }
 
 .app-shell {
