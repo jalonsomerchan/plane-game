@@ -1,0 +1,289 @@
+:root {
+  color-scheme: dark;
+  --bg: #07111e;
+  --panel: rgba(6, 19, 37, 0.84);
+  --panel-strong: rgba(7, 16, 30, 0.92);
+  --accent: #ff5c39;
+  --accent-2: #ffb238;
+  --line: rgba(145, 198, 255, 0.2);
+  --text: #eff6ff;
+  --muted: #9ab2ca;
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  --font: "Trebuchet MS", "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font);
+  color: var(--text);
+  background:
+    radial-gradient(circle at top, rgba(44, 88, 146, 0.35), transparent 35%),
+    linear-gradient(180deg, #08111e 0%, #040812 100%);
+}
+
+.app-shell {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+#gameCanvas {
+  width: 100vw;
+  height: 100vh;
+  display: block;
+  background: #09121c;
+}
+
+.menu-panel,
+.message-panel {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(2, 7, 14, 0.68);
+  backdrop-filter: blur(10px);
+  z-index: 20;
+}
+
+.menu-card,
+.message-card {
+  width: min(92vw, 460px);
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(17, 34, 60, 0.92), rgba(6, 15, 29, 0.95));
+  box-shadow: var(--shadow);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  font-size: 0.72rem;
+}
+
+h1,
+h2,
+.menu-copy,
+.controls-hint,
+.field span,
+.hud,
+button,
+select {
+  margin: 0;
+}
+
+h1,
+h2 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1;
+}
+
+.menu-copy,
+#messageText {
+  margin-top: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.field span {
+  font-size: 0.92rem;
+  color: #d7e7f9;
+}
+
+select,
+button {
+  font: inherit;
+}
+
+select {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  color: var(--text);
+  background: rgba(8, 20, 38, 0.95);
+}
+
+.primary-button,
+.missile-button {
+  border: 0;
+  border-radius: 999px;
+  color: white;
+  cursor: pointer;
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.primary-button:hover,
+.missile-button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.primary-button {
+  width: 100%;
+  margin-top: 18px;
+  padding: 16px 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+}
+
+.controls-hint {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.hud {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  pointer-events: none;
+}
+
+.hud-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--panel);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow);
+}
+
+.touch-controls {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 11;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.joystick-panel,
+.missile-button {
+  min-width: 110px;
+}
+
+.joystick-panel {
+  display: grid;
+  gap: 8px;
+}
+
+.joystick-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+.joystick-base,
+.missile-button {
+  padding: 14px 18px;
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+}
+
+.joystick-base {
+  position: relative;
+  width: 126px;
+  height: 126px;
+  padding: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(88, 139, 198, 0.2), rgba(7, 16, 30, 0.94) 68%),
+    linear-gradient(180deg, rgba(23, 42, 70, 0.95), rgba(7, 16, 30, 0.98));
+  box-shadow: inset 0 0 0 1px rgba(154, 192, 232, 0.12), var(--shadow);
+  touch-action: none;
+}
+
+.joystick-base::before,
+.joystick-base::after {
+  content: "";
+  position: absolute;
+  inset: 50%;
+  background: rgba(168, 207, 255, 0.12);
+  transform: translate(-50%, -50%);
+}
+
+.joystick-base::before {
+  width: 74%;
+  height: 1px;
+}
+
+.joystick-base::after {
+  width: 1px;
+  height: 74%;
+}
+
+.joystick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, #f4fbff, #8ab8df 38%, #26496c 76%, #10243d 100%);
+  box-shadow:
+    0 10px 18px rgba(0, 0, 0, 0.32),
+    inset 0 2px 5px rgba(255, 255, 255, 0.32);
+  transform: translate(-50%, -50%);
+}
+
+.missile-button {
+  background: linear-gradient(135deg, #9f1f14, #f35a2f);
+  font-weight: 700;
+  min-width: 132px;
+}
+
+.hidden {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .hud {
+    flex-direction: column;
+  }
+
+  .touch-controls {
+    justify-content: space-between;
+    align-items: end;
+  }
+
+  .joystick-panel,
+  .missile-button {
+    flex: 1;
+  }
+
+  .joystick-base {
+    width: 112px;
+    height: 112px;
+  }
+}
