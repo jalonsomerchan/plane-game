@@ -14,6 +14,10 @@
 
 * {
   box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -29,9 +33,11 @@ body {
 .app-shell {
   position: relative;
   min-height: 100vh;
+  min-height: -webkit-fill-available;
   display: grid;
   place-items: center;
   overflow: hidden;
+  touch-action: none;
 }
 
 #gameCanvas {
@@ -177,13 +183,14 @@ select {
 
 .touch-controls {
   position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 16px;
+  left: 12px;
+  right: 12px;
+  bottom: 24px;
   z-index: 11;
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
 }
 
 .joystick-panel,
@@ -204,7 +211,8 @@ select {
 }
 
 .joystick-base,
-.missile-button {
+.missile-button,
+.turbo-button {
   padding: 14px 18px;
   background: var(--panel-strong);
   border: 1px solid var(--line);
@@ -257,10 +265,25 @@ select {
   transform: translate(-50%, -50%);
 }
 
+.missile-button,
+.turbo-button {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  font-size: 0.9rem;
+  box-shadow: var(--shadow);
+  text-transform: uppercase;
+}
+
 .missile-button {
   background: linear-gradient(135deg, #9f1f14, #f35a2f);
-  font-weight: 700;
-  min-width: 132px;
+}
+
+.turbo-button {
+  background: linear-gradient(135deg, #2b78d2, #39d5ff);
 }
 
 .hidden {
@@ -269,21 +292,29 @@ select {
 
 @media (max-width: 760px) {
   .hud {
-    flex-direction: column;
+    padding: 0 8px;
+    top: 10px;
   }
 
-  .touch-controls {
-    justify-content: space-between;
-    align-items: end;
-  }
-
-  .joystick-panel,
-  .missile-button {
-    flex: 1;
+  .hud-group {
+    padding: 8px 12px;
+    font-size: 0.85rem;
   }
 
   .joystick-base {
-    width: 112px;
-    height: 112px;
+    width: 100px;
+    height: 100px;
+  }
+  
+  .joystick-knob {
+    width: 42px;
+    height: 42px;
+  }
+
+  .missile-button,
+  .turbo-button {
+    width: 72px;
+    height: 72px;
+    font-size: 0.75rem;
   }
 }

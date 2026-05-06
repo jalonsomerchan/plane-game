@@ -201,7 +201,7 @@ class Game {
     this.ctx = ctx;
     this.tileLayer = new TileLayer();
     this.lastTime = 0;
-    this.keys = { left: false, right: false };
+    this.keys = { left: false, right: false, shift: false, turbo: false };
     this.joystick = { x: 0, y: 0, activePointerId: null };
     this.active = false;
     this.completed = false;
@@ -225,6 +225,8 @@ class Game {
       yawVelocity: 0,
       fireCooldown: 0,
       invulnerable: 0,
+      turbo: 100,
+      isTurbo: false,
     };
     this.bullets = [];
     this.enemyBullets = [];
@@ -306,6 +308,16 @@ class Game {
     this.time += dt;
     if (this.player.invulnerable > 0) this.player.invulnerable -= dt;
 
+    // --- LÓGICA DE TURBO ---
+    const turboActive = this.keys.shift || this.keys.turbo;
+    if (turboActive && this.player.turbo > 0) {
+      this.player.isTurbo = true;
+      this.player.turbo -= dt * 38; 
+    } else {
+      this.player.isTurbo = false;
+      this.player.turbo = Math.min(100, this.player.turbo + dt * 12);
+    }
+
     // --- LÓGICA DE TIMÓN (RUDDER) ---
     const keyTurn = (this.keys.right ? 1 : 0) - (this.keys.left ? 1 : 0);
     const stickMagnitude = Math.hypot(this.joystick.x, this.joystick.y);
@@ -332,7 +344,8 @@ class Game {
 
     // --- VELOCIDAD Y AVANCE ---
     // El avión siempre avanza hacia donde apunta su nariz[cite: 2]
-    const targetSpeed = FLIGHT_MAX_SPEED * 0.85; // Velocidad de crucero constante
+    const turboMultiplier = this.player.isTurbo ? 1.75 : 1.0;
+    const targetSpeed = FLIGHT_MAX_SPEED * 0.85 * turboMultiplier;
     this.player.velocity += (targetSpeed - this.player.velocity) * 1.2 * dt;
 
     this.player.x += Math.cos(this.player.angle) * this.player.velocity * dt;
@@ -549,7 +562,7 @@ class Game {
   updateHud() {
     hudCity.textContent = this.city.name;
     hudObjective.textContent = `Objetivo: ${this.stats.destroyed} / ${this.stats.total}`;
-    hudLife.textContent = `Vida: ${Math.max(0, Math.round(this.player.life))} · Vel ${Math.round(this.player.velocity)}`;
+    hudLife.textContent = `Vida: ${Math.max(0, Math.round(this.player.life))} · Turbo: ${Math.round(this.player.turbo)}%`;
     hudLevel.textContent = `Nivel: ${this.player.level}`;
     hudMissiles.textContent = `Misiles: ${this.player.missiles}`;
   }
@@ -590,6 +603,7 @@ class Game {
 
     // UI (esto no se mueve con la cámara)
     this.renderMinimapHint(ctx);
+    this.renderCompass(ctx);
   }
 
   renderWorldObjects(ctx) {
@@ -634,6 +648,50 @@ class Game {
 
     // --- DIBUJAR EL AVIÓN SIEMPRE EN EL CENTRO ---
     this.renderPlayer(ctx, centerX, centerY);
+  }
+
+  renderCompass(ctx) {
+    const nearest = this.enemies
+      .filter(e => e.type === "ground")
+      .reduce((prev, curr) => {
+        const d = distance(this.player, curr);
+        if (!prev || d < prev.dist) return { enemy: curr, dist: d };
+        return prev;
+      }, null);
+
+    if (!nearest) return;
+
+    const angleToEnemy = Math.atan2(nearest.enemy.y - this.player.y, nearest.enemy.x - this.player.x);
+    const screenAngle = angleToEnemy - this.player.angle - Math.PI / 2;
+
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    const radius = 100;
+
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(screenAngle);
+
+    // Dibujar flecha de brújula
+    ctx.fillStyle = "#ff5c39";
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = "rgba(255, 92, 57, 0.5)";
+    ctx.beginPath();
+    ctx.moveTo(radius + 25, 0);
+    ctx.lineTo(radius, -12);
+    ctx.lineTo(radius + 5, 0);
+    ctx.lineTo(radius, 12);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+
+    // Texto de distancia
+    ctx.fillStyle = "#ffb238";
+    ctx.font = "bold 14px Trebuchet MS";
+    ctx.textAlign = "center";
+    const distText = `${Math.round(nearest.dist / 10)}m`;
+    ctx.fillText(distText, centerX + Math.cos(screenAngle) * (radius + 45), centerY + Math.sin(screenAngle) * (radius + 45));
   }
 
   drawBullet(ctx, b, color = "#fff") {
@@ -776,6 +834,7 @@ async function boot() {
   window.addEventListener("keydown", (event) => {
     if (event.code === "ArrowLeft" || event.code === "KeyA") setTurnState("left", true);
     if (event.code === "ArrowRight" || event.code === "KeyD") setTurnState("right", true);
+    if (event.code === "ShiftLeft" || event.code === "ShiftRight") setTurnState("shift", true);
     if (event.code === "Space") {
       event.preventDefault();
       game.launchMissile();
@@ -785,9 +844,15 @@ async function boot() {
   window.addEventListener("keyup", (event) => {
     if (event.code === "ArrowLeft" || event.code === "KeyA") setTurnState("left", false);
     if (event.code === "ArrowRight" || event.code === "KeyD") setTurnState("right", false);
+    if (event.code === "ShiftLeft" || event.code === "ShiftRight") setTurnState("shift", false);
   });
 
   missileButton.addEventListener("click", () => game.launchMissile());
+
+  const turboButton = document.getElementById("turboButton");
+  turboButton.addEventListener("pointerdown", () => setTurnState("turbo", true));
+  turboButton.addEventListener("pointerup", () => setTurnState("turbo", false));
+  turboButton.addEventListener("pointerleave", () => setTurnState("turbo", false));
 
   joystickBase.addEventListener("pointerdown", (event) => {
     game.joystick.activePointerId = event.pointerId;
