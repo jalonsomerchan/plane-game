@@ -20,24 +20,50 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html,
 body {
   margin: 0;
-  min-height: 100vh;
+  width: 100%;
+  min-width: 100%;
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+html {
+  position: fixed;
+  inset: 0;
+  background: #040812;
+}
+
+body {
+  position: fixed;
+  inset: 0;
   font-family: var(--font);
   color: var(--text);
   background:
     radial-gradient(circle at top, rgba(44, 88, 146, 0.35), transparent 35%),
     linear-gradient(180deg, #08111e 0%, #040812 100%);
+}
+
+button,
+select,
+canvas,
+.touch-controls,
+.joystick-base,
+.joystick-knob {
   touch-action: none;
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-  height: 100%;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .app-shell {
-  position: relative;
+  position: fixed;
+  inset: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   min-height: -webkit-fill-available;
   display: grid;
   place-items: center;
@@ -48,8 +74,10 @@ body {
 #gameCanvas {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   display: block;
   background: #09121c;
+  touch-action: none;
 }
 
 .menu-panel,
@@ -164,9 +192,9 @@ select {
 
 .hud {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  right: 16px;
+  top: max(16px, env(safe-area-inset-top));
+  left: max(16px, env(safe-area-inset-left));
+  right: max(16px, env(safe-area-inset-right));
   z-index: 10;
   display: flex;
   justify-content: space-between;
@@ -188,14 +216,19 @@ select {
 
 .touch-controls {
   position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 24px;
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(24px, calc(env(safe-area-inset-bottom) + 14px));
   z-index: 11;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
+  pointer-events: none;
+}
+
+.touch-controls > * {
+  pointer-events: auto;
 }
 
 .joystick-panel,
@@ -310,7 +343,7 @@ select {
 @media (max-width: 760px) {
   .hud {
     padding: 0 8px;
-    top: 10px;
+    top: max(10px, env(safe-area-inset-top));
   }
 
   .hud-group {
