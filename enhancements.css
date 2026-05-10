@@ -116,7 +116,8 @@
 }
 
 .hud-action,
-.control-chip {
+.control-chip,
+.pause-overlay {
   border: 1px solid var(--line);
   color: var(--text);
   background: var(--panel);
@@ -192,6 +193,32 @@
 .control-chip.is-visible {
   opacity: 1;
   transform: translateX(-50%) translateY(-4px);
+}
+
+.pause-overlay {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 19;
+  padding: 18px 28px;
+  border-radius: 24px;
+  font-size: clamp(1.6rem, 6vw, 3.2rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.92);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+body.is-paused .pause-overlay {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+body.is-paused #gameCanvas {
+  filter: saturate(0.7) brightness(0.72);
 }
 
 .bank-controls {
