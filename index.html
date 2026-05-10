@@ -7,6 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Alien 1942 Cities</title>
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./enhancements.css" />
   </head>
   <body>
     <main class="app-shell">
@@ -16,7 +17,7 @@
           <h1>Alien 1942 Cities</h1>
           <p class="menu-copy">
             Sobrevuela ciudades reales, limpia la invasión alienígena y avanza
-            con un control puro: girar y lanzar misiles especiales.
+            con un control más directo: palanca, viraje lateral, turbo y misiles.
           </p>
           <label class="field">
             <span>Ciudad</span>
@@ -24,8 +25,9 @@
           </label>
           <button id="startButton" class="primary-button">Comenzar misión</button>
           <div class="controls-hint">
-            <span>`A` / `D` o palanca táctil para girar</span>
+            <span>`A` / `D`, laterales táctiles o palanca para girar</span>
             <span>`Espacio` o botón rojo para misiles especiales</span>
+            <span>`P` para pausar · desliza la palanca hacia arriba para turbo</span>
           </div>
         </div>
       </section>
@@ -71,6 +73,7 @@
     </main>
 
     <script type="module" src="./src/mobile-viewport-lock.js"></script>
+    <script type="module" src="./src/game-enhancements.js"></script>
     <script type="module" src="./src/game.js"></script>
   </body>
 </html>
