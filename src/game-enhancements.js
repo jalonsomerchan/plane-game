@@ -1,9 +1,21 @@
+const nativeRequestAnimationFrame = window.requestAnimationFrame.bind(window);
 const gameState = {
   progress: 0,
   life: 100,
   paused: false,
   hintsVisible: true,
   pressedBank: null,
+};
+
+window.requestAnimationFrame = (callback) => {
+  return nativeRequestAnimationFrame(function guardedFrame(timestamp) {
+    if (!gameState.paused) {
+      callback(timestamp);
+      return;
+    }
+
+    nativeRequestAnimationFrame(guardedFrame);
+  });
 };
 
 function qs(selector) {
@@ -23,6 +35,16 @@ function vibrate(pattern = 18) {
   }
 }
 
+function dispatchKey(code, type) {
+  const key = code === "KeyA" ? "a" : "d";
+  window.dispatchEvent(new KeyboardEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    code,
+    key,
+  }));
+}
+
 function installUiOverlay() {
   const shell = qs(".app-shell");
   const hud = qs("#hud");
@@ -31,6 +53,10 @@ function installUiOverlay() {
   const progress = makeElement("div", "hud-progress");
   const progressBar = makeElement("div", "hud-progress__bar");
   progressBar.id = "missionProgressBar";
+  progressBar.setAttribute("role", "progressbar");
+  progressBar.setAttribute("aria-label", "Progreso de la misión");
+  progressBar.setAttribute("aria-valuemin", "0");
+  progressBar.setAttribute("aria-valuemax", "100");
   progress.append(progressBar);
   shell.append(progress);
 
@@ -57,6 +83,11 @@ function installUiOverlay() {
   chip.id = "controlHintChip";
   shell.append(chip);
 
+  const pausedOverlay = makeElement("div", "pause-overlay", "Pausa");
+  pausedOverlay.id = "pauseOverlay";
+  pausedOverlay.setAttribute("aria-hidden", "true");
+  shell.append(pausedOverlay);
+
   const bankControls = makeElement("div", "bank-controls");
   const left = makeElement("button", "bank-zone bank-zone--left", "‹");
   left.id = "bankLeft";
@@ -74,6 +105,7 @@ function installUiOverlay() {
   pauseButton.addEventListener("click", () => {
     gameState.paused = !gameState.paused;
     pauseButton.textContent = gameState.paused ? "▶" : "Ⅱ";
+    pauseButton.setAttribute("aria-pressed", String(gameState.paused));
     window.dispatchEvent(new CustomEvent("plane-game:pause-toggle", { detail: { paused: gameState.paused } }));
     vibrate(12);
   });
@@ -81,6 +113,7 @@ function installUiOverlay() {
   hintButton.addEventListener("click", () => {
     gameState.hintsVisible = !gameState.hintsVisible;
     chip.classList.toggle("is-visible", gameState.hintsVisible);
+    hintButton.setAttribute("aria-pressed", String(gameState.hintsVisible));
     vibrate(10);
   });
 
@@ -157,8 +190,10 @@ function installBankControls() {
 
   const setPressed = (side, pressed) => {
     const target = side === "left" ? left : right;
+    const code = side === "left" ? "KeyA" : "KeyD";
     target.classList.toggle("is-pressed", pressed);
     gameState.pressedBank = pressed ? side : null;
+    dispatchKey(code, pressed ? "keydown" : "keyup");
     window.dispatchEvent(new CustomEvent("plane-game:bank", { detail: { side, pressed } }));
     if (pressed) vibrate(10);
   };
