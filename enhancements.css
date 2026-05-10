@@ -1,0 +1,308 @@
+.app-shell::before,
+.app-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.app-shell::before {
+  background:
+    radial-gradient(circle at 50% 48%, transparent 0 42%, rgba(255, 92, 57, 0.08) 43%, transparent 46%),
+    radial-gradient(circle at 50% 50%, transparent 0 58%, rgba(0, 0, 0, 0.42) 100%);
+  mix-blend-mode: screen;
+}
+
+.app-shell::after {
+  opacity: 0.2;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 100% 4px;
+}
+
+.menu-card,
+.message-card,
+.hud-group,
+.joystick-base,
+.missile-button {
+  animation: ui-pop 340ms ease both;
+}
+
+@keyframes ui-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.menu-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.menu-card::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: conic-gradient(from 120deg, transparent, rgba(255, 178, 56, 0.1), transparent, rgba(57, 213, 255, 0.12), transparent);
+  animation: slow-spin 14s linear infinite;
+  z-index: -1;
+}
+
+@keyframes slow-spin {
+  to { transform: rotate(1turn); }
+}
+
+.primary-button,
+.missile-button,
+.hud-action,
+.control-chip,
+.bank-zone {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.primary-button:active,
+.missile-button:active,
+.hud-action:active,
+.bank-zone.is-pressed,
+.joystick-base.is-active {
+  transform: scale(0.96);
+  filter: brightness(1.16);
+}
+
+.hud {
+  align-items: flex-start;
+}
+
+.hud-group {
+  min-height: 44px;
+}
+
+.hud-progress {
+  position: absolute;
+  left: max(16px, env(safe-area-inset-left));
+  right: max(16px, env(safe-area-inset-right));
+  top: calc(max(16px, env(safe-area-inset-top)) + 62px);
+  z-index: 10;
+  height: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(2, 7, 14, 0.5);
+  box-shadow: 0 0 24px rgba(57, 213, 255, 0.12);
+  pointer-events: none;
+}
+
+.hud-progress__bar {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 16px rgba(255, 178, 56, 0.75);
+  transition: width 160ms ease;
+}
+
+.hud-actions {
+  position: absolute;
+  top: calc(max(16px, env(safe-area-inset-top)) + 78px);
+  right: max(16px, env(safe-area-inset-right));
+  z-index: 12;
+  display: flex;
+  gap: 8px;
+}
+
+.hud-action,
+.control-chip {
+  border: 1px solid var(--line);
+  color: var(--text);
+  background: var(--panel);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow);
+}
+
+.hud-action {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+}
+
+.flight-reticle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 138px;
+  height: 138px;
+  z-index: 9;
+  pointer-events: none;
+  border: 1px solid rgba(255, 178, 56, 0.32);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 28px rgba(255, 178, 56, 0.1), inset 0 0 24px rgba(57, 213, 255, 0.08);
+}
+
+.flight-reticle::before,
+.flight-reticle::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  transform: translate(-50%, -50%);
+}
+
+.flight-reticle::before { width: 1px; height: 40px; }
+.flight-reticle::after { width: 40px; height: 1px; }
+
+.flight-reticle__dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  box-shadow: 0 0 14px var(--accent-2);
+  transform: translate(-50%, -50%);
+}
+
+.control-chip {
+  position: absolute;
+  left: 50%;
+  bottom: max(162px, calc(env(safe-area-inset-bottom) + 142px));
+  z-index: 12;
+  max-width: min(88vw, 360px);
+  padding: 10px 14px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-align: center;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 180ms ease, transform 180ms ease;
+  pointer-events: none;
+}
+
+.control-chip.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+.bank-controls {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.bank-zone {
+  position: absolute;
+  top: 28%;
+  bottom: 26%;
+  width: min(24vw, 150px);
+  border: 1px solid rgba(145, 198, 255, 0.16);
+  color: rgba(239, 246, 255, 0.58);
+  background: linear-gradient(180deg, rgba(7, 16, 30, 0.03), rgba(7, 16, 30, 0.16));
+  opacity: 0.44;
+  border-radius: 28px;
+  display: none;
+  place-items: center;
+  font-size: clamp(1.6rem, 6vw, 2.5rem);
+  font-weight: 900;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.bank-zone--left {
+  left: max(8px, env(safe-area-inset-left));
+}
+
+.bank-zone--right {
+  right: max(8px, env(safe-area-inset-right));
+}
+
+.bank-zone.is-pressed {
+  opacity: 0.85;
+  border-color: rgba(255, 178, 56, 0.5);
+  color: rgba(255, 255, 255, 0.86);
+  box-shadow: inset 0 0 38px rgba(255, 178, 56, 0.12);
+}
+
+.joystick-base.is-active {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 178, 56, 0.28),
+    0 0 26px rgba(57, 213, 255, 0.22),
+    var(--shadow);
+}
+
+.missile-button.is-firing {
+  animation: missile-pulse 260ms ease;
+}
+
+@keyframes missile-pulse {
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 36px rgba(255, 92, 57, 0.55), var(--shadow);
+  }
+}
+
+body.low-life .hud-group,
+body.low-life .flight-reticle {
+  animation: danger-pulse 620ms ease-in-out infinite alternate;
+}
+
+@keyframes danger-pulse {
+  from { border-color: rgba(255, 92, 57, 0.22); }
+  to { border-color: rgba(255, 92, 57, 0.72); box-shadow: 0 0 28px rgba(255, 92, 57, 0.2); }
+}
+
+@media (pointer: coarse), (max-width: 760px) {
+  .bank-zone {
+    display: grid;
+  }
+
+  .flight-reticle {
+    width: 112px;
+    height: 112px;
+  }
+
+  .hud-progress {
+    top: calc(max(10px, env(safe-area-inset-top)) + 54px);
+  }
+
+  .hud-actions {
+    top: calc(max(10px, env(safe-area-inset-top)) + 68px);
+  }
+}
+
+@media (max-width: 520px) {
+  .hud {
+    gap: 8px;
+  }
+
+  .hud-group {
+    max-width: 52vw;
+    gap: 4px 8px;
+    font-size: 0.76rem;
+  }
+
+  .hud-actions {
+    right: max(8px, env(safe-area-inset-right));
+  }
+
+  .hud-action {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .control-chip {
+    bottom: max(148px, calc(env(safe-area-inset-bottom) + 132px));
+  }
+}
