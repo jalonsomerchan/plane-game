@@ -17,7 +17,7 @@
           <h1>Alien 1942 Cities</h1>
           <p class="menu-copy">
             Sobrevuela ciudades reales, limpia la invasión alienígena y avanza
-            con un control más directo: palanca, viraje lateral, turbo y misiles.
+            con controles equivalentes en ordenador y móvil.
           </p>
           <label class="field">
             <span>Ciudad</span>
@@ -25,9 +25,10 @@
           </label>
           <button id="startButton" class="primary-button">Comenzar misión</button>
           <div class="controls-hint">
-            <span>`A` / `D`, laterales táctiles o palanca para girar</span>
-            <span>`Espacio` o botón rojo para misiles especiales</span>
-            <span>`P` para pausar · desliza la palanca hacia arriba para turbo</span>
+            <span>Ordenador: `A/D` o flechas para girar · `W`/`↑` para turbo</span>
+            <span>Ratón/trackpad: arrastra en el canvas para virar · clic para misil</span>
+            <span>Móvil: joystick, laterales táctiles, turbo hacia arriba y botón de misil</span>
+            <span>`Espacio` dispara misil · `P` pausa la partida</span>
           </div>
         </div>
       </section>
@@ -76,6 +77,7 @@
     <script type="module" src="./src/game-enhancements.js"></script>
     <script type="module" src="./src/safe-spawn.js"></script>
     <script type="module" src="./src/enemy-bullet-visibility.js"></script>
+    <script type="module" src="./src/unified-controls.js"></script>
     <script type="module" src="./src/game.js"></script>
   </body>
 </html>
